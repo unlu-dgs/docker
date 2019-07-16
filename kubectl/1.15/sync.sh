@@ -60,6 +60,7 @@ function run_sync () {
 
     for pod in $pods
     do
+        kubecmd_chmod="$(kubectl exec ${pod} chmod +x bin/arai-cli)"
         cmd="bin/arai-cli registry:sync --aceptar-pedidos-acceso"
         kubectl exec ${pod} -- sh -c "${cmd}"
     done
