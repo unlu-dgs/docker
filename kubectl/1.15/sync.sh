@@ -20,7 +20,7 @@ function get_configmap_name () {
 function get_deploy_pods_for () {
     local selfLink=$(kubectl get deployment.apps "${1}" -n "${k8s_ns}" -o jsonpath={.metadata.selfLink})
     local selector=$(kubectl get --raw "${selfLink}"/scale | jq -r .status.selector)
-    local pods=$(kubectl get pods -n "${k8s_ns}" -o=name --selector "${selector}" | sed "s/^.\{4\}//")
+    local pods=$(kubectl get pods -n "${k8s_ns}" --field-selector=status.phase==Running -o=name --selector "${selector}" | sed "s/^.\{4\}//")
     echo "${pods}"
 }
 
