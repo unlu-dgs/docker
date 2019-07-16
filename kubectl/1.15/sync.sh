@@ -113,5 +113,10 @@ done
 
 for deployment in $deployments
 do
+    regid=$(kubectl get deployment ${deployment} -o jsonpath='{.metadata.annotations.siu-registry-id}')
+    if [ -z "$regid" ]; then
+        echo "> Ignorando ${deployment}. No se incluyó la annotation siu-registry-id con el id de instancia"
+        continue
+    fi
     save_configmap $deployment $regid
 done
