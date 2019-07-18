@@ -16,6 +16,17 @@ function get_configmap_name () {
     echo "arai-lock--$1"
 }
 
+function format_status () {
+    echo -e "\e[34m> $1"
+    echo -e "\e[0m"
+}
+
+function format_cmd_output () {
+    format_status "$1"
+    echo -e "\e[90m$2" | sed 's/^.*/   &/g'
+    echo -e "\e[0m"
+}
+
 # https://github.com/kubernetes/kubernetes/issues/72794#issuecomment-483502617
 function get_deploy_pods_for () {
     local selfLink=$(kubectl get deployment.apps "${1}" -n "${k8s_ns}" -o jsonpath={.metadata.selfLink})
@@ -30,11 +41,11 @@ function get_first_deploy_pod_for () {
 }
 
 function save_configmap () {
-    local pod="$(get_first_deploy_pod_for ${1})"
-    local registry_id="$2"
+    local pod=$1
+    local registry_id=$2
     local configmap="$(get_configmap_name ${registry_id})"
 
-    echo "> Actualizando configmap ${configmap} para ${1}"
+    format_status "Actualizando configmap ${configmap} para ${1}"
     kubectl exec ${pod} -- sh -c "cat arai.lock" > /tmp/arai.lock
     kubectl create configmap ${configmap} --from-file=/tmp/arai.lock --dry-run -o yaml | kubectl apply -f - 
     rm /tmp/arai.lock
@@ -47,7 +58,7 @@ function cargar_configmaps () {
     # update configmap
     for pod in $pods
     do
-        echo "> Cargando configmap en ${pod}"
+        format_status "Cargando configmap en ${pod}"
         configmap="$(get_configmap_name ${registry_id})"
         kubectl get configmap ${configmap} -o jsonpath='{.data.arai\.lock}' > /tmp/arai.lock
         kubectl cp /tmp/arai.lock ${pod}:/usr/local/app/arai.lock
@@ -60,9 +71,10 @@ function run_sync () {
 
     for pod in $pods
     do
-        kubecmd_chmod="$(kubectl exec ${pod} chmod +x bin/arai-cli)"
+        kubectl exec ${pod} -- sh -c "chmod +x bin/arai-cli"
         cmd="bin/arai-cli registry:sync --aceptar-pedidos-acceso"
-        kubectl exec ${pod} -- sh -c "${cmd}"
+        rs=$(kubectl exec ${pod} -- sh -c "${cmd}")
+        format_cmd_output "Output sync en ${pod}" "$rs"
     done
 }
 
@@ -75,7 +87,7 @@ for deployment in $deployments
 do
     regid=$(kubectl get deployment ${deployment} -o jsonpath='{.metadata.annotations.siu-registry-id}')
     if [ -z "$regid" ]; then
-        echo "> Ignorando ${deployment}. No se incluyó la annotation siu-registry-id con el id de instancia"
+        format_status "Ignorando ${deployment}. No se incluyó la annotation siu-registry-id con el id de instancia"
         continue
     fi
 
@@ -89,12 +101,14 @@ do
         echo "> Agregando ${deployment}:${pod} a registry"
 
         # ASEGURAR permiso de ejecución
-        kubecmd_chmod="$(kubectl exec ${pod} chmod +x bin/arai-cli)"
+        kubectl exec ${pod} -- sh -c "chmod +x bin/arai-cli"
+
         cmd="bin/arai-cli registry:add -m robot -e robot@siu.edu.ar --nombre-instancia=${regid} \${ARAI_REGISTRY_URL}"
-        kubectl exec ${pod} -- sh -c "${cmd}"
+        rs=$(kubectl exec ${pod} -- sh -c "${cmd}")
+        format_cmd_output "Output add en ${pod}" "$rs"
 
         # crear configmap
-        save_configmap $deployment $regid
+        save_configmap $pod $regid
     fi
 
     cargar_configmaps $deployment $regid
@@ -115,8 +129,9 @@ for deployment in $deployments
 do
     regid=$(kubectl get deployment ${deployment} -o jsonpath='{.metadata.annotations.siu-registry-id}')
     if [ -z "$regid" ]; then
-        echo "> Ignorando ${deployment}. No se incluyó la annotation siu-registry-id con el id de instancia"
+        format_status "Ignorando ${deployment}. No se incluyó la annotation siu-registry-id con el id de instancia"
         continue
     fi
-    save_configmap $deployment $regid
+    pod="$(get_first_deploy_pod_for ${deployment})"
+    save_configmap $pod $regid
 done
