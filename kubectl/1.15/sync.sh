@@ -79,7 +79,7 @@ function run_sync () {
 }
 
 # Instalar: curl, bash
-ARAI_REGISTRY_URL="http://${ARAI_REGISTRY_SERVICE_HOST}/registry/rest"
+ARAI_REGISTRY_URL="http://${SIU_REGISTRY_SVC_SERVICE_HOST}/registry/rest"
 CURL_CREDENTIALS="-u registry:registry"
 
 deployments=$(kubectl get deployments -o=name --selector=siu-registry=enabled | cut -d/ -f2-)
