@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 k8s_ns="${POD_NAMESPACE:-default}"
+kubectl config set-context --current --namespace=${k8s_ns}
 
 function error() {
     if [ -z "$1" ]; then
