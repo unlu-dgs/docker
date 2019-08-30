@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 k8s_ns="${POD_NAMESPACE:-default}"
-kubectl config set-context --current --namespace=${k8s_ns}
 
 function error() {
     if [ -z "$1" ]; then
@@ -83,9 +82,10 @@ function run_sync () {
 ARAI_REGISTRY_URL="http://${SIU_REGISTRY_SVC_SERVICE_HOST}/registry/rest"
 CURL_CREDENTIALS="-u registry:registry"
 
-deployments=$(kubectl get deployments -o=name --selector=siu-registry=enabled | cut -d/ -f2-)
+deployments=$(kubectl get deployments -n "${k8s_ns}" -o=name --selector=siu-registry=enabled | cut -d/ -f2-)
 for deployment in $deployments
 do
+    format_status "Intentando con ${deployment}"
     regid=$(kubectl get deployment ${deployment} -o jsonpath='{.metadata.annotations.siu-registry-id}')
     if [ -z "$regid" ]; then
         format_status "Ignorando ${deployment}. No se incluyó la annotation siu-registry-id con el id de instancia"
