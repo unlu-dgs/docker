@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 k8s_ns="${POD_NAMESPACE:-default}"
+if [ -z "$REGISTRY_SVC_NAME" ]; then
+      error "Debe definir la variable de entorno REGISTRY_SVC_NAME con el nombre del servicio de registry. Ej: 'arai-registry-svc'" 
+fi
+
+registry_service="${REGISTRY_SVC_NAME:-registry-svc-not-set}"
+registry_alias="${REGISTRY_ALIAS:-test_registry}"
 
 function error() {
     if [ -z "$1" ]; then
@@ -35,7 +41,8 @@ function get_deploy_pods_for () {
     #format_status ${selector}
     #local pods=$(kubectl get pods -n "${k8s_ns}" --field-selector=status.phase==Running -o=name --selector "${selector}" | sed "s/^.\{4\}//")
 
-    local pods=$(kubectl get pods -n "${k8s_ns}" --selector=app="${1}" -o custom-columns=":metadata.name")
+    local app_name=$(kubectl get deployment "${1}" -n "${k8s_ns}" -o json | jq -r .metadata.labels.app)
+    local pods=$(kubectl get pods -n "${k8s_ns}" --selector=app="${app_name}" -o custom-columns=":metadata.name")
     echo "${pods}" 
 }
 
@@ -87,10 +94,14 @@ function run_sync () {
 }
 
 # Instalar: curl, bash
-ARAI_REGISTRY_URL="http://${SIU_REGISTRY_SVC_SERVICE_HOST}/registry/rest"
+ARAI_REGISTRY_URL="http://${registry_service}/${registry_alias}/rest"
 CURL_CREDENTIALS="-u registry:registry"
 
+format_status "Iniciando. Registry url: ${ARAI_REGISTRY_URL}"
+
+
 deployments=$(kubectl get deployments -n "${k8s_ns}" -o=name --selector=siu-registry=enabled | cut -d/ -f2-)
+
 for deployment in $deployments
 do
     format_status "Intentando con ${deployment}"
@@ -103,6 +114,8 @@ do
     url="${ARAI_REGISTRY_URL}/packages/${regid}"
     response_code=$(curl ${CURL_CREDENTIALS} --write-out %{http_code} --silent --output /dev/null ${url})
 
+    format_status "GET ${url}"
+    format_status ">> RESPONSE ${response_code}"
     # si no está registrado ejecutar el add y agregar
     # el arai.lock al configmap
     if [ "$response_code" != "200" ]; then
@@ -144,3 +157,5 @@ do
     pod="$(get_first_deploy_pod_for ${deployment})"
     save_configmap $pod $regid
 done
+
+format_status "Finalizado"
