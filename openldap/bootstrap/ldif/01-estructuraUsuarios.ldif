@@ -1,28 +1,28 @@
-# Entry Usuarios: ou=usuarios,dc=siu,dc=cin,dc=edu
-dn: ou=usuarios,dc=siu,dc=cin,dc=edu
+# Entry Usuarios: ou=usuarios,dc=unlu,dc=edu,dc=ar
+dn: ou=usuarios,dc=unlu,dc=edu,dc=ar
 changetype: add
 objectclass: top
 objectclass: organizationalUnit
 ou: usuarios
 
-# Entry Usuarios Cuentas: ou=usuariosCuentas,dc=siu,dc=cin,dc=edu
-dn: ou=usuariosCuentas,dc=siu,dc=cin,dc=edu
+# Entry Usuarios Cuentas: ou=usuariosCuentas,dc=unlu,dc=edu,dc=ar
+dn: ou=usuariosCuentas,dc=unlu,dc=edu,dc=ar
 changetype: add
 objectclass: top
 objectclass: organizationalUnit
 ou: usuariosCuentas
 
-# Entry Grupos: ou=groups,dc=siu,dc=cin,dc=edu
-dn: ou=groups,dc=siu,dc=cin,dc=edu
+# Entry Grupos: ou=groups,dc=unlu,dc=edu,dc=ar
+dn: ou=groups,dc=unlu,dc=edu,dc=ar
 changetype: add
 objectclass: top
 objectclass: organizationalUnit
 ou: groups
 
-# Subgrupo devs: cn=devs,ou=groups,dc=siu,dc=cin,dc=edu
-dn: cn=devs,ou=groups,dc=siu,dc=cin,dc=edu
+# Subgrupo devs: cn=devs,ou=groups,dc=unlu,dc=edu,dc=ar
+dn: cn=devs,ou=groups,dc=unlu,dc=edu,dc=ar
 changetype: add
 objectclass: groupofnames
 cn: devs
-member: cn=admin,dc=siu,dc=cin,dc=edu
+member: cn=admin,dc=unlu,dc=edu,dc=ar
 

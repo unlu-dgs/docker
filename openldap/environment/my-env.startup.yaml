@@ -7,14 +7,14 @@
 # more information : https://github.com/osixia/docker-light-baseimage
 
 # Required and used for new ldap server only
-LDAP_ORGANISATION: CIN
-LDAP_DOMAIN: siu.cin.edu
-LDAP_ADMIN_PASSWORD: p4ssw0rd
-LDAP_CONFIG_PASSWORD: pa55word
+LDAP_ORGANISATION: UNLU
+LDAP_DOMAIN: unlu.edu.ar
+LDAP_ADMIN_PASSWORD: cTa35enCgVDA4unuKg9QUCe43hGKKB
+LDAP_CONFIG_PASSWORD: cTa35enCgVDA4unuKg9QUCe43hGKKB
 
 LDAP_READONLY_USER: false
 LDAP_READONLY_USER_USERNAME: readonly
-LDAP_READONLY_USER_PASSWORD: passwr0rd!
+LDAP_READONLY_USER_PASSWORD: cTa35enCgVDA4unuKg9QUCe43hGKKB
 
 # Tls
 LDAP_TLS: false
